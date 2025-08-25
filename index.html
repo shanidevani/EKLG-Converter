@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gujarati Unicode to EKLG Converter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+  <!-- Login Form -->
+  <div id="loginBox" class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Login</h2>
+    <div class="mb-4">
+      <label class="block text-gray-700 mb-2">Username</label>
+      <input type="text" id="username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Enter username">
+    </div>
+    <div class="mb-4">
+      <label class="block text-gray-700 mb-2">Password</label>
+      <input type="password" id="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Enter password">
+    </div>
+    <button id="loginButton" class="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">Login</button>
+    <div id="loginMessage" class="mt-4 text-center text-sm font-medium hidden"></div>
+  </div>
+
+  <!-- Converter Section (Hidden by default) -->
+  <div id="converterBox" class="bg-white rounded-lg shadow-xl p-8 max-w-4xl w-full hidden">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">ગુજરાતી યુનિકોડ થી EKLG કન્વર્ટર</h1>
+    <p class="text-gray-600 mb-8 text-center">
+      તમારા ગુજરાતી યુનિકોડ ટેક્સ્ટને EKLG ફોર્મેટમાં રૂપાંતરિત કરો.
+      <br>
+      <span class="text-sm text-red-500">
+        નોંધ: આ રૂપાંતરણ મેપિંગ પ્રદાન કરેલા Python કોડ પર આધારિત છે.
+      </span>
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label for="unicodeInput" class="block text-lg font-medium text-gray-700 mb-2">યુનિકોડ ગુજરાતી ઇનપુટ</label>
+        <textarea id="unicodeInput" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-base resize-y min-h-[150px]" placeholder="અહીં તમારો યુનિકોડ ગુજરાતી ટેક્સ્ટ દાખલ કરો..."></textarea>
+      </div>
+      <div>
+        <label for="eklgOutput" class="block text-lg font-medium text-gray-700 mb-2">EKLG આઉટપુટ</label>
+        <textarea id="eklgOutput" class="w-full p-4 border border-gray-300 rounded-lg bg-gray-50 text-base resize-y min-h-[150px]" readonly placeholder="રૂપાંતરિત EKLG ટેક્સ્ટ અહીં દેખાશે..."></textarea>
+      </div>
+    </div>
+
+    <div class="mt-8 flex justify-center space-x-4">
+      <button id="convertButton" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700">કન્વર્ટ કરો</button>
+      <button id="copyButton" class="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700">કોપી કરો</button>
+    </div>
+    <div id="messageBox" class="mt-4 text-center text-sm font-medium hidden"></div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginBox = document.getElementById('loginBox');
+      const converterBox = document.getElementById('converterBox');
+      const loginButton = document.getElementById('loginButton');
+      const loginMessage = document.getElementById('loginMessage');
+
+      // Static credentials
+      const USERNAME = "admin";
+      const PASSWORD = "12345";
+
+      // Handle Login
+      loginButton.addEventListener('click', () => {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if (username === USERNAME && password === PASSWORD) {
+          loginBox.classList.add('hidden');
+          converterBox.classList.remove('hidden');
+        } else {
+          loginMessage.textContent = "❌ Invalid username or password!";
+          loginMessage.className = "mt-4 text-center text-sm font-medium text-red-600 block";
+        }
+      });
+
+      // Converter Logic
+      const unicodeInput = document.getElementById('unicodeInput');
+      const eklgOutput = document.getElementById('eklgOutput');
+      const convertButton = document.getElementById('convertButton');
+      const copyButton = document.getElementById('copyButton');
+      const messageBox = document.getElementById('messageBox');
+
+      const conversion_map = {
+        'અ': 'y','આ': 'yt','ઇ': 'E','ઈ': 'E','ઉ': 'W','ઊ': 'Q','એ': 'yu','ઐ': 'yi',
+        'ઓ': 'ytu','ઔ': 'yti','ક': 'f','ખ': 'Ft','ગ': 'dt','ઘ': 'Dt','ચ': 'at','છ': 'A',
+        'જ': 's','ઝ': 'L','જા': 'S','ટ': 'x','ઠ': 'X','ડ': 'z','ઢ': 'Z','ણ': 'Kt','ત': ';t',
+        'થ': ':t','દ': "'",'ધ': '"t','ન': 'lt','પ': 'vt','ફ': 'V','બ': 'ct','ભ': 'Ct','મ': 'bt',
+        'ય': 'gt','ર': 'h','લ': 'jt','ળ': 'G','વ': 'Jt','શ': 'Nt','ષ': 'Mt','સ': 'mt','હ': 'n',
+        'રૂ': '~','જી': 'B',
+        'ા': 't','િ': 'r','ી': 'e','ુ': 'w','ૂ': 'q','ૃ': ']','ે': 'u','ૈ': 'Oi','ો': 'tu','ૌ': 'ti',
+        '્': 'k','ં': '^','ઃ': '&',
+        '૦': '0','૧': '1','૨': '2','૩': '3','૪': '4','૫': '5','૬': '6','૭': '7','૮': '8','૯': '9',
+        ' ': ' ','.': '.',',': ','
+      };
+
+      function convertGujaratiToEklg(gujarati_text) {
+        let converted_text_parts = [];
+        let i = 0;
+        while (i < gujarati_text.length) {
+          let matched = false;
+          for (let len = 3; len >= 1; len--) {
+            if (i + len <= gujarati_text.length) {
+              let sub_string = gujarati_text.substring(i, i + len);
+              if (conversion_map[sub_string] !== undefined) {
+                converted_text_parts.push(conversion_map[sub_string]);
+                i += len;
+                matched = true;
+                break;
+              }
+            }
+          }
+          if (!matched) {
+            converted_text_parts.push(gujarati_text[i]);
+            i++;
+          }
+        }
+        return converted_text_parts.join("");
+      }
+
+      convertButton.addEventListener('click', () => {
+        const input = unicodeInput.value;
+        const output = convertGujaratiToEklg(input);
+        eklgOutput.value = output;
+        showMessage("રૂપાંતરણ સફળ!", "text-green-600");
+      });
+
+      copyButton.addEventListener('click', () => {
+        if (eklgOutput.value) {
+          eklgOutput.select();
+          document.execCommand('copy');
+          showMessage("ટેક્સ્ટ કોપી થઈ ગયું!", "text-green-600");
+        } else {
+          showMessage("કૉપી કરવા માટે કોઈ ટેક્સ્ટ નથી.", "text-red-600");
+        }
+      });
+
+      function showMessage(message, className) {
+        messageBox.textContent = message;
+        messageBox.className = `mt-4 text-center text-sm font-medium ${className} block`;
+        setTimeout(() => {
+          messageBox.classList.add('hidden');
+        }, 3000);
+      }
+    });
+  </script>
+</body>
+</html>
