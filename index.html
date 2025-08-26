@@ -60,97 +60,82 @@
     <div id="messageBox" class="mt-4 text-center text-sm font-medium hidden"></div>
   </div>
 
-  <script>
+ <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const loginBox = document.getElementById('loginBox');
-      const converterBox = document.getElementById('converterBox');
-      const loginButton = document.getElementById('loginButton');
-      const loginMessage = document.getElementById('loginMessage');
+        const unicodeInput = document.getElementById('unicodeInput');
+        const eklgOutput = document.getElementById('eklgOutput');
+        const convertButton = document.getElementById('convertButton');
+        const copyButton = document.getElementById('copyButton');
+        const messageBox = document.getElementById('messageBox');
 
-      // Static credentials
-      const USERNAME = "admin";
-      const PASSWORD = "12345";
+        const conversion_map = {
+            'અ': 'y', 'આ': 'yt', 'ઇ': 'E', 'ઈ': 'E', 'ઉ': 'W', 'ઊ': 'Q', 'એ': 'yu', 'ઐ': 'yi', 'ઓ': 'ytu', 'ઔ': 'yti',
+            'ક': 'f', 'ખ': 'Ft', 'ગ': 'dt', 'ઘ': 'Dt', 'ચ': 'at', 'છ': 'A', 'જ': 's', 'ઝ': 'L', 'જા': 'S', 'ટ': 'x',
+            'ઠ': 'X', 'ડ': 'z', 'ઢ': 'Z', 'ણ': 'Kt', 'ત': ';t', 'થ': ':t', 'દ': "'", 'ધ': '"t', 'ન': 'lt', 'પ': 'vt',
+            'ફ': 'V', 'બ': 'ct', 'ભ': 'Ct', 'મ': 'bt', 'ય': 'gt', 'ર': 'h', 'લ': 'jt', 'ળ': 'G', 'વ': 'Jt', 'શ': 'Nt',
+            'ષ': 'Mt', 'સ': 'mt', 'હ': 'n', 'રૂ': '~', 'જી': 'B', 'શ્ર': '`',
+            'ા': 't', 'િ': 'r', 'ી': 'e', 'ુ': 'w', 'ૂ': 'q', 'ૃ': ']', 'ે': 'u', 'ૈ': 'Oi', 'ો': 'tu', 'ૌ': 'ti',
+            '્': 'T', 'ં': 'k', 'ઃ': '&',
+            '૦': '0', '૧': '1', '૨': '2', '૩': '3', '૪': '4', '૫': '5', '૬': '6', '૭': '7', '૮': '8', '૯': '9',
+            ' ': ' ', '.': '.', ',': ',',
+            '¦': 'Alt+0166', '§': 'Alt+0167', '¨': 'Alt+0168', '©': 'Alt+0169', '«': 'Alt+0171', '¬': 'Alt+0172',
+            '¯': 'Alt+0175', '°': 'Alt+0176', '±': 'Alt+0177', '²': 'Alt+0178', '³': 'Alt+0179', '´': 'Alt+0180',
+            'µ': 'Alt+0181', '¶': 'Alt+0182', '·': 'Alt+0183', '¸': 'Alt+0184', '¹': 'Alt+0185', 'º': 'Alt+0186',
+            '»': 'Alt+0187', '¼': 'Alt+0188', '½': 'Alt+0189', '¾': 'Alt+0190', '¿': 'Alt+0191',
+            'ઋ': 'Ò', 'ગ્': 'd', 'ખ્': 'F', 'ઘ્': 'D', 'ચ્': 'a', 'ણ્': 'K', 'ત્': ';', 'થ્': ':', 'ધ્': '"',
+            'ન્': 'l', 'પ્': 'v', 'બ્': 'c', 'ભ્': 'C', 'મ્': 'b', 'ય્': 'g', 'લ્': 'j', 'વ્': 'J', 'શ્': 'N',
+            'ષ્': '>', 'સ્': 'm', 'ક્ષ્': 'H', 'ટ્ર': 'x{', 'ઁ': 'pk', 'ૐ': 'Ó', 'ફ્ર': '§', 'દ્ધ': '}',
+            'દ્વ': '«', 'દ્ર': 'Y', 'હ્ય': 'Ï', 'શ્ચ': '\\', 'હ્મ': 'Í', 'ઙ': 'Õ', 'શ્ર': '`', ' ્ર': ' {', 'ર્ ': ' o'
+        };
 
-      // Handle Login
-      loginButton.addEventListener('click', () => {
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value.trim();
+        const mapKeys = Object.keys(conversion_map).sort((a, b) => b.length - a.length);
 
-        if (username === USERNAME && password === PASSWORD) {
-          loginBox.classList.add('hidden');
-          converterBox.classList.remove('hidden');
-        } else {
-          loginMessage.textContent = "❌ Invalid username or password!";
-          loginMessage.className = "mt-4 text-center text-sm font-medium text-red-600 block";
-        }
-      });
-
-      // Converter Logic
-      const unicodeInput = document.getElementById('unicodeInput');
-      const eklgOutput = document.getElementById('eklgOutput');
-      const convertButton = document.getElementById('convertButton');
-      const copyButton = document.getElementById('copyButton');
-      const messageBox = document.getElementById('messageBox');
-
-      const conversion_map = {
-      'અ': 'y','આ': 'yt','ઇ': 'E','ઈ': 'E','ઉ': 'W','ઊ': 'Q','એ': 'yu','ઐ': 'yi',  'ઓ': 'ytu','ઔ': 'yti' 'ક': 'f', 'ખ': 'Ft', 'ગ': 'dt', 'ઘ': 'Dt', 'ચ': 'at', 'છ': 'A', 'જ': 's', 'ઝ': 'L', 'જા': 'S', 'ટ': 'x', 'ઠ': 'X', 'ડ': 'z', 'ઢ': 'Z', 'ણ': 'Kt', 'ત': ';t', 'થ': ':t', 'દ': "'", 'ધ': '"t', 'ન': 'lt', 'પ': 'vt', 'ફ': 'V', 'બ': 'ct', 'ભ': 'Ct', 'મ': 'bt', 'ય': 'gt', 'ર': 'h', 'લ': 'jt', 'ળ': 'G', 'વ': 'Jt', 'શ': 'Nt', 'ષ': 'Mt', 'સ': 'mt', 'હ': 'n', 'રૂ': '~', 'જી': 'B', 'શ્ર': '`',
-       'ા': 't', 'િ': 'r', 'ી': 'e', 'ુ': 'w', 'ૂ': 'q', 'ૃ': ']', 'ે': 'u', 'ૈ': 'Oi', 'ો': 'tu', 'ૌ': 'ti', '્': 'T', 'ં': 'k', 'ઃ': '&',
-      '૦': '0', '૧': '1', '૨': '2', '૩': '3', '૪': '4', '૫': '5', '૬': '6', '૭': '7', '૮': '8', '૯': '9',
-      ' ': ' ', '.': '.', ',': ',',
-      '¦': 'Alt+0166', '§': 'Alt+0167', '¨': 'Alt+0168', '©': 'Alt+0169', '«': 'Alt+0171', '¬': 'Alt+0172', '¯': 'Alt+0175', '°': 'Alt+0176', '±': 'Alt+0177', '²': 'Alt+0178', '³': 'Alt+0179', '´': 'Alt+0180', 'µ': 'Alt+0181', '¶': 'Alt+0182', '·': 'Alt+0183', '¸': 'Alt+0184', '¹': 'Alt+0185', 'º': 'Alt+0186', '»': 'Alt+0187', '¼': 'Alt+0188', '½': 'Alt+0189', '¾': 'Alt+0190', '¿': 'Alt+0191',
-      'ઋ': 'Ò', 'ગ્': 'd', 'ખ્': 'F', 'ઘ્': 'D', 'ચ્': 'a', 'ણ્': 'K', 'ત્': ';', 'થ્': ':', 'ધ્': '"', 'ન્': 'l', 'પ્': 'v', 'બ્': 'c', 'ભ્': 'C', 'મ્': 'b', 'ય્': 'g', 'લ્': 'j', 'વ્': 'J', 'શ્': 'N', 'ષ્': '>', 'સ્': 'm', 'ક્ષ્': 'H', 'ટ્ર': 'x{', 'ઁ': 'pk', 'ૐ': 'Ó', 'ફ્ર': '§', 'દ્ધ': '}', 'દ્વ': '«', 'દ્ર': 'Y', 'હ્ય': 'Ï', 'શ્ચ': '\\', 'હ્મ': 'Í', 'ઙ': 'Õ', 'શ્ર': '`', ' ્ર': ' {', 'ર્ ': ' o',
-       
-      };
-
-      function convertGujaratiToEklg(gujarati_text) {
-        let converted_text_parts = [];
-        let i = 0;
-        while (i < gujarati_text.length) {
-          let matched = false;
-          for (let len = 3; len >= 1; len--) {
-            if (i + len <= gujarati_text.length) {
-              let sub_string = gujarati_text.substring(i, i + len);
-              if (conversion_map[sub_string] !== undefined) {
-                converted_text_parts.push(conversion_map[sub_string]);
-                i += len;
-                matched = true;
-                break;
-              }
+        function convertGujaratiToEklg(gujarati_text) {
+            let converted_text_parts = [];
+            let i = 0;
+            while (i < gujarati_text.length) {
+                let matched = false;
+                for (const key of mapKeys) {
+                    if (gujarati_text.startsWith(key, i)) {
+                        converted_text_parts.push(conversion_map[key]);
+                        i += key.length;
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    converted_text_parts.push(gujarati_text[i]);
+                    i++;
+                }
             }
-          }
-          if (!matched) {
-            converted_text_parts.push(gujarati_text[i]);
-            i++;
-          }
+            return converted_text_parts.join("");
         }
-        return converted_text_parts.join("");
-      }
 
-      convertButton.addEventListener('click', () => {
-        const input = unicodeInput.value;
-        const output = convertGujaratiToEklg(input);
-        eklgOutput.value = output;
-        showMessage("રૂપાંતરણ સફળ!", "text-green-600");
-      });
+        convertButton.addEventListener('click', () => {
+            const input = unicodeInput.value;
+            const output = convertGujaratiToEklg(input);
+            eklgOutput.value = output;
+            showMessage("રૂપાંતરણ સફળ!", "text-green-600");
+        });
 
-      copyButton.addEventListener('click', () => {
-        if (eklgOutput.value) {
-          eklgOutput.select();
-          document.execCommand('copy');
-          showMessage("ટેક્સ્ટ કોપી થઈ ગયું!", "text-green-600");
-        } else {
-          showMessage("કૉપી કરવા માટે કોઈ ટેક્સ્ટ નથી.", "text-red-600");
+        copyButton.addEventListener('click', () => {
+            if (eklgOutput.value) {
+                eklgOutput.select();
+                document.execCommand('copy');
+                showMessage("ટેક્સ્ટ કોપી થઈ ગયું!", "text-green-600");
+            } else {
+                showMessage("કૉપી કરવા માટે કોઈ ટેક્સ્ટ નથી.", "text-red-600");
+            }
+        });
+
+        function showMessage(message, className) {
+            messageBox.textContent = message;
+            messageBox.className = `mt-4 text-center text-sm font-medium ${className} block`;
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 3000);
         }
-      });
-
-      function showMessage(message, className) {
-        messageBox.textContent = message;
-        messageBox.className = `mt-4 text-center text-sm font-medium ${className} block`;
-        setTimeout(() => {
-          messageBox.classList.add('hidden');
-        }, 3000);
-      }
     });
-  </script>
+</script>
 </body>
 </html>
